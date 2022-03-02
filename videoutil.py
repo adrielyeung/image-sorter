@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import cv2
 
-def get_first_frame(video_filename):
+def getFirstFrame(video_filename):
     '''
     Extract first frame image from a video file.
 

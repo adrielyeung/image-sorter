@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>955</width>
+    <width>1024</width>
     <height>810</height>
    </rect>
   </property>
@@ -428,12 +428,40 @@
           </font>
          </property>
          <property name="text">
-          <string>Image Category (Folder name to insert into)</string>
+          <string>Select image category (Folder name to insert into)
+from dropdown or insert new category</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="categoryEdit"/>
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <item>
+          <widget class="QComboBox" name="availCategoryBox">
+           <property name="minimumSize">
+            <size>
+             <width>340</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>Arial</family>
+             <pointsize>11</pointsize>
+            </font>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="categoryEdit">
+           <property name="font">
+            <font>
+             <family>Arial</family>
+             <pointsize>11</pointsize>
+            </font>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </item>
@@ -468,8 +496,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>931</width>
-        <height>577</height>
+        <width>1000</width>
+        <height>548</height>
        </rect>
       </property>
       <property name="sizePolicy">
@@ -483,8 +511,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>892</width>
-         <height>666</height>
+         <width>1001</width>
+         <height>550</height>
         </rect>
        </property>
        <property name="font">

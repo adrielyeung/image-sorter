@@ -19,6 +19,9 @@ guilogger = logsetup.setup(__file__)
 START_SORT_FOLDER_BY_DATE = 'Start call sort_folder_by_date, directory {dirname}'
 END_SORT_FOLDER_BY_DATE = 'End call sort_folder_by_date, directory {dirname}'
 DISPLAY_FOLDER = 'Start display folder {dirname}'
+NAME_FOLDER = 'Folder {dirname} named as category {cate}'
+FINISHED_FOLDER = 'Finished categorising directory {dirname}'
+FINISHED_GUI = '<Finished>'
 
 # File extensions
 JPG_EXT = '.jpg'
@@ -58,24 +61,35 @@ class GUI(ResizableQDialog):
         # Loads the UI
         loadUi('res/imagesort.ui', self)
         
-        self.setVariables()
-        self.setWindowProperties()
-        self.setButtonActions()
+        self.initAll()
         
-    def setVariables(self):
-        self.dir_path = None
+    def initAll(self):        
+        self.initVariables()
+        self.initWindowProperties()
+        self.initButtonActions()
+        
+    def initVariables(self):
+        self.dirPath = None
+        self.datePath = None
         self.image = None
-        self.img_enlarge = None
+        self.imgEnlarge = None
+        # img_all stores the images with padding
         self.img_all = []
+        # img_original stores the images without padding (as loaded)
         self.img_original = []
+        # fnames stores all file attributes of each loaded file in tuples
         self.fnames = []
+        # dnames stores all date directories names (yyyymmdd)
         self.dnames = []
+        # cnames stores all sorted categories' names (e.g. places / food etc.)
+        self.cnames = ['']
+        # dind is the index of current iteration of dnames
         self.dind = 0
         self.boxWidth = None
         self.borderWidth = None
-        self.img_index = None
+        self.imgIndex = None
     
-    def setWindowProperties(self):
+    def initWindowProperties(self):
         # Set minimise / maximise buttons
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowMinMaxButtonsHint)
         # Setup the image display within the scrollable area
@@ -92,8 +106,10 @@ class GUI(ResizableQDialog):
         self.borderInput.setValue(5)
         self.borderInput.setRange(0, 10)
         self.borderInput.setSingleStep(1)
+        # Clear all available categories
+        self.availCategoryBox.clear()
     
-    def setButtonActions(self):
+    def initButtonActions(self):
         # Use the "clicked.connect" to connect each action (clicked, changed values) to the call function (slot),
         # using the name defined in Designer.
         self.numImageInput.valueChanged.connect(self.on_spinbox_valueChanged)
@@ -107,6 +123,8 @@ class GUI(ResizableQDialog):
         self.zoomOutButton.setEnabled(False)
         # Resizing window connects to function to change widget sizes
         self.resized.connect(self.resizeWidget)
+        # Enable browsing but diable all other functions
+        self.enableBrowse(True)
     
     # The slot is a callable function which an action performed by the user will connect to.
     @pyqtSlot()
@@ -118,19 +136,22 @@ class GUI(ResizableQDialog):
         '''
         # Use ".text()" to extract the text input
         if self.inputPathEdit.text() == "":
-            init_path = "C:\\Users"
+            initPath = "C:\\Users"
         else:
-            init_path = self.inputPathEdit.text()
+            initPath = self.inputPathEdit.text()
 
         # QFileDialog is the dialog box to browse the directories
         # Arguments (self, window_name, initial_path)
-        directory = QFileDialog.getExistingDirectory(self, "Browse Folder", init_path)
+        directory = QFileDialog.getExistingDirectory(self, "Browse Folder", initPath)
 
         if directory:
             # Sort into directory with date
-            self.dir_path = directory
+            self.dirPath = directory
             self.sortDirectoryByDate()
             self.loadDateDirectories()
+            self.inputPathEdit.setText(directory)
+            # Disable browsing and enable zoom in, submit etc.
+            self.enableBrowse(False)
             
     def sortDirectoryByDate(self):
         '''
@@ -138,36 +159,71 @@ class GUI(ResizableQDialog):
         and videos into folder named as date (i.e. yyyymmdd)
 
         '''
-        guilogger.info(START_SORT_FOLDER_BY_DATE.format(dirname=self.dir_path))
-        os.chdir(self.dir_path)
-        sf.sort_directory_by_date(self.dir_path)
-        guilogger.info(END_SORT_FOLDER_BY_DATE.format(dirname=self.dir_path))
+        guilogger.info(START_SORT_FOLDER_BY_DATE.format(dirname=self.dirPath))
+        os.chdir(self.dirPath)
+        sf.sort_directory_by_date(self.dirPath)
+        guilogger.info(END_SORT_FOLDER_BY_DATE.format(dirname=self.dirPath))
         
     def loadDateDirectories(self):
-        for (dirpath, dirnames, filenames) in os.walk(self.dir_path):
-            self.dnames.extend(dirnames)
+        for (dirpath, dirnames, filenames) in os.walk(self.dirPath):
+            for dirname in dirnames:
+                if re.search("^[0-9]+$", dirname):
+                    self.dnames.append(dirname)
+                else:
+                    self.cnames.append(dirname)
             break
         
+        self.availCategoryBox.addItems(self.cnames)
         self.loadNextDateDirectory()
     
     def loadNextDateDirectory(self):
+        # Finish processing all directories
+        if self.dind >= len(self.dnames):
+            self.clearImage()
+            self.dateLabel.setText(FINISHED_GUI)
+            self.initAll()
+            self.enableBrowse(True)
+            guilogger.info(FINISHED_FOLDER.format(dirname=self.dirPath))
         # Only work with date folders (yyyymmdd)
-        if self.dind < len(self.dnames):
+        else:
             dname = self.dnames[self.dind]
-            if re.search("^[0-9]+$", dname):
-                dpath = os.path.join(self.dir_path, dname)
-                guilogger.info(DISPLAY_FOLDER.format(dirname=dpath))
-                os.chdir(dpath)
-                self.loadPath(os.listdir(dpath))
-                self.load()
-                self.dateLabel.setText(dname)
-        self.dind += 1
+            self.dind += 1
+            self.datePath = os.path.join(self.dirPath, dname)
+            guilogger.info(DISPLAY_FOLDER.format(dirname=self.datePath))
+            self.loadPath(os.listdir(self.datePath))
+            self.load()
+            self.dateLabel.setText(dname)
+        self.categoryEdit.setText('')
+    
+    def clearImage(self):
+        self.imgLabel.setPixmap(iu.getClearPixmap(self.imgLabel))
     
     @pyqtSlot()
     def submitCategory(self):
-        dpath = self.dateLabel.text()
-        for fname in os.listdir(os.path.join(self.dir_path, dpath)):
-            os.replace(fname, self.categoryEdit.text()
+        # Validate user has non-space input
+        category = self.categoryEdit.text().strip()
+        if len(category) == 0:
+            category = str(self.availCategoryBox.currentText()).strip();
+            
+        if len(category) > 0:
+            self.cnames.append(category)
+            self.availCategoryBox.addItem(category)
+            
+            tpath = os.path.join(self.dirPath, category)
+            
+            if not os.path.isdir(tpath):
+                os.mkdir(tpath)
+            
+            # Move each file into specified category folder
+            for fname in os.listdir(self.datePath):
+                os.replace(os.path.join(self.datePath, fname), os.path.join(tpath, fname))
+            
+            # If empty, remove date folder
+            if not os.listdir(self.datePath):
+                os.rmdir(self.datePath)
+            
+            guilogger.info(NAME_FOLDER.format(dirname=self.dateLabel.text(), cate=category))
+            self.loadNextDateDirectory()
 
     def loadPath(self, list_of_fnames):
         '''
@@ -179,6 +235,7 @@ class GUI(ResizableQDialog):
         list_of_fnames : list
 
         '''
+        os.chdir(self.datePath)
         self.fnames = []
         for fname in list_of_fnames:
             # Only load specified image and video formats
@@ -186,6 +243,7 @@ class GUI(ResizableQDialog):
                 fname.endswith(MP4_EXT):
                 self.fnames.append([fname, os.path.getmtime(fname), 
                                     os.path.getctime(fname), os.path.getsize(fname)])
+        os.chdir(self.dirPath)
     
     @pyqtSlot()
     def load(self):
@@ -223,15 +281,18 @@ class GUI(ResizableQDialog):
         Reads all files and combines them into one large image.
 
         '''
+        os.chdir(self.datePath)
         self.img_original = []
         for name in self.fnames:
             img = None
             if name[0].endswith(MP4_EXT):
-                img = vu.get_first_frame(name[0])
+                img = vu.getFirstFrame(name[0])
             else:
-                img = iu.get_image(name[0])
+                img = iu.getImage(name[0])
             # Save the original pictures when padding (border width / no. of images per row) changes
             self.img_original.append(img)
+        
+        os.chdir(self.dirPath)
 
     def combineImages(self):
         # Width of border - input
@@ -253,11 +314,11 @@ class GUI(ResizableQDialog):
         self.winWidth = self.displayArea.frameGeometry().width() - 20  # - 20 to account for the scroll bar
         self.winHeight = self.displayArea.frameGeometry().height() - 10
         if self.fnames:
-            if self.img_index is not None:
+            if self.imgIndex is not None:
                 # In zoom mode
-                self.img_enlarge = iu.scaleImage(self.img_original[self.img_index].copy(), 
+                self.imgEnlarge = iu.scaleImage(self.img_original[self.imgIndex].copy(), 
                                                  self.winHeight, self.winWidth)
-                self.displayImage(self.img_enlarge)
+                self.displayImage(self.imgEnlarge)
             else:
                 # Not in zoom mode, call functions to regenerate the thumbnails
                 self.combineImages()
@@ -300,12 +361,12 @@ class GUI(ResizableQDialog):
             # Locate the row and column of the image
             row = self.imgLabel.pos_y//(self.boxWidth + 2*self.borderWidth)
             column = self.imgLabel.pos_x//(self.boxWidth + 2*self.borderWidth)
-            self.img_index = row*self.numImageInput.value() + column
-            if self.img_index < len(self.img_all):  # An image clicked, enter zoom mode
+            self.imgIndex = row*self.numImageInput.value() + column
+            if self.imgIndex < len(self.img_all):  # An image clicked, enter zoom mode
                 self.enableZoomOut(False)
-                self.img_enlarge = iu.scaleImage(self.img_original[self.img_index].copy(), 
+                self.imgEnlarge = iu.scaleImage(self.img_original[self.imgIndex].copy(), 
                                                  self.winHeight, self.winWidth)
-                self.displayImage(self.img_enlarge)
+                self.displayImage(self.imgEnlarge)
 
     @pyqtSlot()
     def zoomOutClicked(self):
@@ -316,10 +377,33 @@ class GUI(ResizableQDialog):
         '''
         if self.img_all:
             self.displayImage(self.image)
-            self.img_index = None
-            self.img_enlarge = None
+            self.imgIndex = None
+            self.imgEnlarge = None
             self.enableZoomOut(True)
             self.resizeWidget()
+            
+    def enableBrowse(self, enabled):
+        '''
+        Toggle enable between browse mode (browse for folder) and
+        sort mode (sort each folder date into category after browsing for folder)
+
+        Parameters
+        ----------
+        enabled : bool
+            Browse mode enabled (True) or Sort mode enabled (False).
+
+        '''
+        self.inputPathEdit.setEnabled(enabled)
+        self.browseButton.setEnabled(enabled)
+        self.zoomOutButton.setEnabled(not enabled)
+        self.numImageInput.setEnabled(not enabled)
+        self.borderInput.setEnabled(not enabled)
+        self.sortByBox.setEnabled(not enabled)
+        self.sortBox.setEnabled(not enabled)
+        self.refreshButton.setEnabled(not enabled)
+        self.availCategoryBox.setEnabled(not enabled)
+        self.categoryEdit.setEnabled(not enabled)
+        self.submitButton.setEnabled(not enabled)
 
     def enableZoomOut(self, zoomOut):
         '''
@@ -336,13 +420,16 @@ class GUI(ResizableQDialog):
             self.imgLabel.mouseDoubleClickEvent = self.enlarge
         else:
             self.imgLabel.mouseDoubleClickEvent = None
+        
         self.zoomOutButton.setEnabled(not zoomOut)
-        self.browseButton.setEnabled(zoomOut)
         self.numImageInput.setEnabled(zoomOut)
         self.borderInput.setEnabled(zoomOut)
         self.sortByBox.setEnabled(zoomOut)
         self.sortBox.setEnabled(zoomOut)
         self.refreshButton.setEnabled(zoomOut)
+        self.availCategoryBox.setEnabled(zoomOut)
+        self.categoryEdit.setEnabled(zoomOut)
+        self.submitButton.setEnabled(zoomOut)
         
 def main():
     # Create application object

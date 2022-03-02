@@ -4,7 +4,7 @@ import numpy as np
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5 import QtCore
 
-def get_image(image_filename):
+def getImage(image_filename):
     return cv2.imread(image_filename)
 
 def combineImages(img_all, borderWidth, winWidth, numImage):
@@ -200,3 +200,21 @@ def scaleImage(img_enlarge, winHeight, winWidth):
         return cv2.copyMakeBorder(img_enlarge, pad_area_l, pad_area_r, pad_width_l,
                                               pad_width_r, cv2.BORDER_CONSTANT, value=(255, 255, 255))
         # padding on four sides to fit into the rectangular display area
+        
+def getClearPixmap(image):
+    '''
+    Generate a transparent pixel map, used to clear any image.
+
+    Parameters
+    ----------
+    image : QLabel which holds the image
+
+    Returns
+    -------
+    clrPixmap : QPixmap
+        Transparent QPixmap with same height and width of image.
+
+    '''
+    clrPixmap = QPixmap(image.frameGeometry().width(), image.frameGeometry().height())
+    clrPixmap.fill(QtCore.Qt.transparent)
+    return clrPixmap
