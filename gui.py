@@ -206,7 +206,8 @@ class GUI(ResizableQDialog):
             category = str(self.availCategoryBox.currentText()).strip();
             
         if len(category) > 0:
-            self.cnames.append(category)
+            if not category in self.cnames:
+                self.cnames.append(category)
             self.availCategoryBox.addItem(category)
             
             tpath = os.path.join(self.dirPath, category)
