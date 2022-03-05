@@ -163,16 +163,19 @@ class GUI(ResizableQDialog):
         os.chdir(self.dirPath)
         sf.sort_directory_by_date(self.dirPath)
         guilogger.info(END_SORT_FOLDER_BY_DATE.format(dirname=self.dirPath))
-        
-    def loadDateDirectories(self):
+    
+    def loadDAndCnames(self, conly=False):
         for (dirpath, dirnames, filenames) in os.walk(self.dirPath):
             for dirname in dirnames:
                 if re.search("^[0-9]+$", dirname):
-                    self.dnames.append(dirname)
+                    if not conly:
+                        self.dnames.append(dirname)
                 else:
                     self.cnames.append(dirname)
             break
-        
+    
+    def loadDateDirectories(self):
+        self.loadDAndCnames()        
         self.availCategoryBox.addItems(self.cnames)
         self.loadNextDateDirectory()
     
@@ -206,10 +209,6 @@ class GUI(ResizableQDialog):
             category = str(self.availCategoryBox.currentText()).strip();
             
         if len(category) > 0:
-            if not category in self.cnames:
-                self.cnames.append(category)
-            self.availCategoryBox.addItem(category)
-            
             tpath = os.path.join(self.dirPath, category)
             
             if not os.path.isdir(tpath):
@@ -219,7 +218,13 @@ class GUI(ResizableQDialog):
             for fname in os.listdir(self.datePath):
                 os.replace(os.path.join(self.datePath, fname), os.path.join(tpath, fname))
             
-            # If empty, remove date folder
+            # Refresh available categories if new category
+            if not category in self.cnames:
+                self.loadDAndCnames(True)
+                self.availCategoryBox.clear()
+                self.availCategoryBox.addItems(self.cnames)
+            
+            # If date folder empty, remove
             if not os.listdir(self.datePath):
                 os.rmdir(self.datePath)
             

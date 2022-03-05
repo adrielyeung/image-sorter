@@ -5,9 +5,9 @@ import PIL
 import logsetup, logging
 
 # Strings
-IMAGE_PREFIX = 'IMG_'
-PANO_PREFIX = 'PANO_'
-VIDEO_PREFIX = 'VID_'
+IMAGE_PREFIX = 'IMG'
+PANO_PREFIX = 'PANO'
+VIDEO_PREFIX = 'VID'
 LINUX_SEP = '/'
 
 # Formatter
