@@ -3,7 +3,7 @@ A Python UI to enable automation of sorting **Camera Upload** photos and videos 
 
 ## Getting started
 ### Prerequisites
-Require OpenCV Python, PyQt5 for core functions.
+Require Python packages OpenCV, PyQt5, PIL for core functions.
 
 ### Installing
 After cloning the repository, run ```application.py```.
@@ -15,8 +15,8 @@ The GUI starts up in the **Browse mode**. Click "Browse" to browse for a directo
 <img src="https://github.com/adrielyeung/image-sorter/blob/main/img/GUIBrowse.png" alt="Image Sorter GUI Browse mode" width="70%" height="70%">
 
 ### Image view mode
-After browsing for a directory, all images and videos prefixed "IMG_", "VID_" and "PANO_" respectively
-(normally default file names by Camera Upload) are sorted into folders according to their shot date.
+After browsing for a directory, all images and videos prefixed "IMG", "VID" and "PANO" respectively
+(normally default file prefixes by Camera Upload) are sorted into folders according to their shot date.
 (e.g. an image with path "dir/IMG_abc.png" shot at 4/Mar/2022 will be sorted into "dir/20220304" folder.)
 
 For each date folder, all images within are displayed in the **Image view mode** in thumbnail display (for videos, first frame is taken).
@@ -48,5 +48,6 @@ All sub-logger messages are routed to root logger, and handled in ```log/yyyymmd
 
 ### Future developments
 1. Auto-identify category through computer vision (OpenCV).
+2. Enter a backup directory. All images categorised will be copied to the backup directory in the same category folder.
   
 Feel free to suggest!
