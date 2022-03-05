@@ -69,11 +69,15 @@ def sort_directory_by_date(directory_str):
         if filename.startswith(IMAGE_PREFIX) or \
             filename.startswith(VIDEO_PREFIX) or \
                 filename.startswith(PANO_PREFIX):
-            mdate_str = "Undated"
+            mdate_str = None
             
             if filename.startswith(IMAGE_PREFIX) or \
                 filename.startswith(PANO_PREFIX):
                 mdate_str = getsdate(filename)
+                
+                # Use modified date if cannot get shoot date
+                if not mdate_str:
+                    mdate_str = getmdate(filename)
             
             if filename.startswith(VIDEO_PREFIX):
                 mdate_str = getmdate(filename)
@@ -103,9 +107,9 @@ def getsdate(filename):
     '''
     with PIL.Image.open(filename) as image:
         EXIF_data = image._getexif()
-        sdate = EXIF_data.get(306)
-    
-    return sdate[0:4] + sdate[5:7] + sdate[8:10]
+        if EXIF_data:
+            sdate = EXIF_data.get(306)
+            return sdate[0:4] + sdate[5:7] + sdate[8:10]
 
 def getmdate(filename):
     '''
