@@ -17,11 +17,12 @@ guilogger = logsetup.setup(__file__)
 
 # Log msg
 START_SORT_FOLDER_BY_DATE = 'Start call sort_folder_by_date, directory {dirname}'
-END_SORT_FOLDER_BY_DATE = 'End call sort_folder_by_date, directory {dirname}'
+END_SORT_FOLDER_BY_DATE = 'End call sort_folder_by_date, directory {dirname}. Number of files sorted: {filecount}'
 DISPLAY_FOLDER = 'Start display folder {dirname}'
 NAME_FOLDER = 'Folder {dirname} named as category {cate}'
 FINISHED_FOLDER = 'Finished categorising directory {dirname}'
 FINISHED_GUI = '<Finished>'
+NO_IMAGE_FOUND = '<No image or video found in above directory>'
 
 # File extensions
 JPG_EXT = '.jpg'
@@ -147,11 +148,13 @@ class GUI(ResizableQDialog):
         if directory:
             # Sort into directory with date
             self.dirPath = directory
-            self.sortDirectoryByDate()
-            self.loadDateDirectories()
+            if self.sortDirectoryByDate() > 0:
+                self.loadDateDirectories()
+                # Disable browsing and enable zoom in, submit etc.
+                self.enableBrowse(False)
+            else:
+                self.dateLabel.setText(NO_IMAGE_FOUND)
             self.inputPathEdit.setText(directory)
-            # Disable browsing and enable zoom in, submit etc.
-            self.enableBrowse(False)
             
     def sortDirectoryByDate(self):
         '''
@@ -161,8 +164,9 @@ class GUI(ResizableQDialog):
         '''
         guilogger.info(START_SORT_FOLDER_BY_DATE.format(dirname=self.dirPath))
         os.chdir(self.dirPath)
-        sf.sort_directory_by_date(self.dirPath)
-        guilogger.info(END_SORT_FOLDER_BY_DATE.format(dirname=self.dirPath))
+        filecount = sf.sort_directory_by_date(self.dirPath)
+        guilogger.info(END_SORT_FOLDER_BY_DATE.format(dirname=self.dirPath, filecount=filecount))
+        return filecount
     
     def loadDAndCnames(self, conly=False):
         for (dirpath, dirnames, filenames) in os.walk(self.dirPath):
