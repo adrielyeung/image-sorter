@@ -1,6 +1,8 @@
 # image-sorter
 A Python UI to enable automation of sorting **Camera Upload** photos and videos by date, place, category.
 
+[Download a .exe to try out.](https://1drv.ms/u/s!Av6qln4wiYJRiu1ODnlCEjoBLbnqdg?e=3KviQe) Need both ```application.exe``` and ```res``` folder in same directory.
+
 ## Getting started
 ### Prerequisites
 Require Python packages OpenCV, PyQt5, PIL for core functions.
