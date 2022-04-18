@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import logsetup
-import gui
+import imagesort_ui as gui
 
 # Log msg
 START_GUI = 'Start GUI'

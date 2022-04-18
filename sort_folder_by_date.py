@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys, os
 import datetime as dt
-import PIL
+import PIL.Image
 import logsetup, logging
 
 # Strings

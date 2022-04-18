@@ -29,6 +29,9 @@ JPG_EXT = '.jpg'
 PNG_EXT = '.png'
 MP4_EXT = '.mp4'
 
+# Cache file to store last loaded path (for next use)
+LAST_PATH_FILE = os.path.dirname(sys.argv[0]) + os.path.sep + "last_path.txt"
+
 class ExtendedQLabel(QLabel):
     '''
     Extended QLabel which extracts the x- and y-position of user click,
@@ -109,6 +112,8 @@ class GUI(ResizableQDialog):
         self.borderInput.setSingleStep(1)
         # Clear all available categories
         self.availCategoryBox.clear()
+        # Set initial path from cache if found
+        self.inputPathEdit.setText(self.readLastPath())
     
     def initButtonActions(self):
         # Use the "clicked.connect" to connect each action (clicked, changed values) to the call function (slot),
@@ -155,6 +160,18 @@ class GUI(ResizableQDialog):
             else:
                 self.dateLabel.setText(NO_IMAGE_FOUND)
             self.inputPathEdit.setText(directory)
+            self.writeLastPath(directory)
+            
+    def readLastPath(self):
+        if os.path.exists(LAST_PATH_FILE):
+            with open(LAST_PATH_FILE, 'r') as f:
+                return f.readline()
+        else:
+            return ""
+        
+    def writeLastPath(self, lastPath):
+        with open(LAST_PATH_FILE, 'w') as f:
+            f.write(lastPath)
             
     def sortDirectoryByDate(self):
         '''
